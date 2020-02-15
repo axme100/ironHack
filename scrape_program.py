@@ -1,6 +1,4 @@
 import scrape
-import jornada_scraper
-import la_prensa_scraper
 import excelsior
 
 

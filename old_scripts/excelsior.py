@@ -1,8 +1,6 @@
 from scrape import daily_scraper
 from scrape import rawArticle
 import requests
-from requests.adapters import HTTPAdapter
-from requests.exceptions import ConnectionError
 from bs4 import BeautifulSoup
 import feedparser
 import re
