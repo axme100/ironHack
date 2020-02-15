@@ -34,7 +34,7 @@ class excelsior_scraper(daily_scraper):
                 # It appears that all of the text is located in a div caled text
                 articleText = bs.find('div', {'id': 'node-article-body'}).get_text().replace('\n','').strip()
             except AttributeError as error:
-                errors.append(error)
+                errors.append(repr(error))
                 articleText=''
 
             # Get the author from the page  
@@ -46,6 +46,7 @@ class excelsior_scraper(daily_scraper):
                 author = re.sub(r" \/.*","",author)
             except AttributeError as error:
                 print(error)
+                errors.append(repr(error))
             
 
             # Create an article object
