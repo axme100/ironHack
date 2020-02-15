@@ -2,3 +2,4 @@ app-env
 .ipynb_checkpoints/
 books/
 __pycache__
+*.pdf
