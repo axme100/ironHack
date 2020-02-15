@@ -132,7 +132,6 @@ class daily_scraper:
     # Go through the article objects and scrape each one
     def scrape_articles(self):
 
-
         for article in self.articles_to_scrape:
 
             # In order to set the max_retries we need to:
