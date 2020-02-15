@@ -1,12 +1,16 @@
 import os
 import pymongo
 from pymongo import MongoClient
+import feedparser
+import requests
+from bs4 import BeautifulSoup
 
 # Get the mongodb password from an environment variable
 mongoPass = os.environ['mongoPass']
 
 # Establish the remote connection to the mongo data base
-myclient = pymongo.MongoClient("mongodb+srv://axme100:{}@cluster0-5jopz.mongodb.net/test?retryWrites=true&w=majority".format(mongoPass))
+#myclient = pymongo.MongoClient("mongodb+srv://axme100:{}@cluster0-5jopz.mongodb.net/test?retryWrites=true&w=majority".format(mongoPass))
+myclient = pymongo.MongoClient()
 
 # This is the name of the cluster stored on mongo atlas
 mydb = myclient["finalProject"]
@@ -17,23 +21,34 @@ mycol = mydb["rawArticles"]
 
 # Define the class that will be created
 class rawArticle:
-    def __init__(self, url, title, date, authors, publication, articleText, errors):
+    def __init__(self, url, title, date, publication, xml_author):
         self.url = url
         self.title = title
         self.date = date
         self.publication = publication
-        self.articleText = articleText
-        self.errors = errors
-        self.authors = authors
+        self.article_text = ''
+        self.errors = []
+        self.xml_author = xml_author
         
-    def saveToDatabase(self):
+    def set_article_text(self, article_text):
+        self.article_text = article_text
+    
+    def add_error(self, error):
+        self.errors.append(error)
+    
+    def get_url(self):
+        print (self.url)
+        return self.url
+
+
+    def save_to_database(self):
         # Save the entry into the mongo database
         mycol.insert_one({'url': self.url,
                          'title': self.title,
                          'date': self.date,
                          'publication': self.publication,
-                         'articleText': self.articleText,
-                         'authors': self.authors,
+                         'articleText': self.article_text,
+                         'authors': self.xml_author,
                          'errors': self.errors})
 
     # This method is used for printing output to console
@@ -45,9 +60,17 @@ class rawArticle:
 # Define a class of scraper
 class daily_scraper:
 
-    def __init__(self):
+    def __init__(self, target_xml_url, publication, div_info):
+        self.publication = publication
         self.articles_scraped_no_errors = []
         self.articles_scraped_with_errors = []
+        self.target_xml_url = target_xml_url
+        # In this case, the  list attribute urls to scrape is
+        # automatically set as soon as the object is created
+        self.articles_to_scrape = []
+        self.div_info = div_info
+        self.headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:73.0) Gecko/20100101 Firefox/73.0'}
+
 
     def trackScrapes(self, rawArticle):
 
@@ -73,3 +96,51 @@ class daily_scraper:
             print("")
             for error in problemArticle[1]:
                 print(error)
+
+    # Go through the XML feed and create a bunch of article objects
+    def get_target_articles_to_scrape(self):
+
+        
+        parsed_xml = feedparser.parse(self.target_xml_url)
+
+        for entry in parsed_xml['entries']:
+
+            # Get the author field of the XML document
+            # If there is none leave it blank
+            try:
+                xml_author = entry['author']
+            except KeyError as keyError:
+                xml_author = ''
+
+
+            # Create an article object
+            target_article = rawArticle(url=entry['link'],
+                                  title=entry['title'],
+                                  date=entry['published'],
+                                  publication=self.publication,
+                                  xml_author= xml_author)
+
+            # Add the target article object to the scraper obje t
+            self.articles_to_scrape.append(target_article)
+
+
+    # Go through the article objects and scrape each one
+    def scrape_articles(self):
+
+        for article in self.articles_to_scrape:
+
+            html_soup = requests.get(article.get_url(), headers=self.headers)
+            parsed_soup = BeautifulSoup(html_soup.text, 'html.parser')
+
+            # Get the text from the article
+            try:
+                # It appears that all of the text is located in a div caled text
+                articleText = parsed_soup.find(self.div_info['target_tag'], {self.div_info['target_tag_att']: self.div_info['target_tag_att_value']}).get_text().replace('\n','').strip()
+                article.set_article_text(articleText)
+                print(articleText)
+            except AttributeError as error:
+                article.add_error({"Error getting article text: ": repr(error)})
+
+            article.save_to_database()
+
+            self.trackScrapes(article)
