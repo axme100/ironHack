@@ -71,7 +71,6 @@ class daily_scraper:
             # Add the target article object to the scraper obje t
             self.articles_to_scrape.append(article_to_add)
 
-    
     def configure_transport_adapter(self, domain):
 
         # In order to set the max_retries we need to:
@@ -87,16 +86,16 @@ class daily_scraper:
 
         transport_adapter = HTTPAdapter(max_retries=retries)
 
-        session.mount(my_article.get_domain(), transport_adapter)
+        session.mount(domain, transport_adapter)
 
+        return session
 
     # Go through the article objects and scrape each one
     def scrape_articles(self):
 
-
         for my_article in self.articles_to_scrape:
 
-            
+            session = self.configure_transport_adapter(my_article.get_domain())
 
             try:
                 html_soup = session.get(my_article.get_url(), headers=self.headers)
