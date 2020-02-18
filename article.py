@@ -32,7 +32,7 @@ class rawArticle:
         self.errors.append(error)
 
     def get_url(self):
-        print(self.url)
+        # print(self.url)
         return self.url
 
     def get_domain(self):
@@ -52,14 +52,15 @@ class rawArticle:
     # This method is used for printing output to console
     # In order to monitor scraping in real time
     def printInfo(self):
-        print('url: ' + self.url)
-        print('errors' + str(self.errors))
+        #print('url: ' + self.url)
+        #print('errors' + str(self.errors))
+        pass
 
     # This method is called within the sraper to see
     # if the article is already in the database from the url
     def check_for_url_duplicate(self):
         duplicate = list(mycol.find({'url': self.url}, {'url': 1, "_id": 0}))
-        print(duplicate)
+        #print(duplicate)
         if duplicate:
             return True
         else:

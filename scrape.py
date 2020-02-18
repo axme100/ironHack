@@ -5,6 +5,7 @@ from requests.exceptions import ConnectionError
 from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
 import article
+import pandas as pd
 
 
 #  Define a class of scraper
@@ -36,6 +37,9 @@ class daily_scraper:
 
     def get_daily_stats(self):
 
+        print("*******************ERROR REPORT**************************")
+        print("**********************BEGIN******************************")
+        print("Target XML URL: " + str(self.target_xml_url))
         print("Total Artciles Scraped: " + str(len(self.articles_scraped_no_errors) + len(self.articles_scraped_with_errors)))
         print("Articles With Errors: " + str(len(self.articles_scraped_with_errors)))
 
@@ -59,12 +63,15 @@ class daily_scraper:
                 xml_author = entry['author']
             except KeyError as keyError:
                 xml_author = ''
-                print(keyError)
+                # print(keyError)
+
+            formatted_date = pd.to_datetime(entry['published'])
+            print(formatted_date)
 
             # Create an article object
             article_to_add = article.rawArticle(url=entry['link'],
                                                 title=entry['title'],
-                                                date=entry['published'],
+                                                date=formatted_date,
                                                 publication=self.publication,
                                                 xml_author=xml_author)
 
@@ -128,7 +135,7 @@ class daily_scraper:
                 articleText = articleText.get_text().replace('\n', '').strip()
 
                 my_article.set_article_text(articleText)
-                print(articleText)
+                # print(articleText)
 
             except AttributeError as error:
                 my_article.add_error({"Error getting article text: ": repr(error)})
