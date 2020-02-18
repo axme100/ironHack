@@ -1,65 +1,10 @@
-import os
-import pymongo
 import feedparser
 import requests
 from requests.adapters import HTTPAdapter
 from requests.exceptions import ConnectionError
 from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
-
-# Get the mongodb password from an environment variable
-mongoPass = os.environ['mongoPass']
-
-# Establish the remote connection to the mongo data base:
-# pymongo.MongoClient("mongodb+srv://axme100:{}@cluster0-5jopz.mongodb.net/test?retryWrites=true&w=majority".format(mongoPass))
-myclient = pymongo.MongoClient()
-
-# This is the name of the cluster stored on mongo atlas
-mydb = myclient["finalProject"]
-
-# Create a new colection called raw article
-mycol = mydb["rawArticles"]
-
-
-class rawArticle:
-    def __init__(self, url, title, date, publication, xml_author):
-        self.url = url
-        self.title = title
-        self.date = date
-        self.publication = publication
-        self.article_text = ''
-        self.errors = []
-        self.xml_author = xml_author
-
-    def set_article_text(self, article_text):
-        self.article_text = article_text
-
-    def add_error(self, error):
-        self.errors.append(error)
-
-    def get_url(self):
-        print(self.url)
-        return self.url
-
-    def get_domain(self):
-        return self.url.split("//")[-1].split("/")[0].split('?')[0]
-
-    def save_to_database(self):
-
-        # Save the entry into the mongo database
-        mycol.insert_one({'url': self.url,
-                          'title': self.title,
-                          'date': self.date,
-                          'publication': self.publication,
-                          'articleText': self.article_text,
-                          'authors': self.xml_author,
-                          'errors': self.errors})
-
-    # This method is used for printing output to console
-    # In order to monitor scraping in real time
-    def printInfo(self):
-        print('url: ' + self.url)
-        print('errors' + str(self.errors))
+import article
 
 
 #  Define a class of scraper
@@ -91,7 +36,7 @@ class daily_scraper:
 
     def get_daily_stats(self):
 
-        print("Total Number of Articles Attempted To Scrape: " + str(len(self.articles_scraped_no_errors) + len(self.articles_scraped_with_errors)))
+        print("Total Artciles Scraped: " + str(len(self.articles_scraped_no_errors) + len(self.articles_scraped_with_errors)))
         print("Articles With Errors: " + str(len(self.articles_scraped_with_errors)))
 
         print("Errors: ")
@@ -102,7 +47,6 @@ class daily_scraper:
             for error in problemArticle[1]:
                 print(error)
 
-    # Go through the XML feed and create a bunch of article objects
     def get_target_articles_to_scrape(self):
 
         parsed_xml = feedparser.parse(self.target_xml_url)
@@ -118,19 +62,19 @@ class daily_scraper:
                 print(keyError)
 
             # Create an article object
-            target_article = rawArticle(url=entry['link'],
-                                        title=entry['title'],
-                                        date=entry['published'],
-                                        publication=self.publication,
-                                        xml_author=xml_author)
+            article_to_add = article.rawArticle(url=entry['link'],
+                                                title=entry['title'],
+                                                date=entry['published'],
+                                                publication=self.publication,
+                                                xml_author=xml_author)
 
             # Add the target article object to the scraper obje t
-            self.articles_to_scrape.append(target_article)
+            self.articles_to_scrape.append(article_to_add)
 
     # Go through the article objects and scrape each one
     def scrape_articles(self):
 
-        for article in self.articles_to_scrape:
+        for my_article in self.articles_to_scrape:
 
             # In order to set the max_retries we need to:
             # create a re request.Session()
@@ -145,14 +89,14 @@ class daily_scraper:
 
             transport_adapter = HTTPAdapter(max_retries=retries)
 
-            session.mount(article.get_domain(), transport_adapter)
+            session.mount(my_article.get_domain(), transport_adapter)
 
             try:
-                html_soup = session.get(article.get_url(), headers=self.headers)
+                html_soup = session.get(my_article.get_url(), headers=self.headers)
                 parsed_soup = BeautifulSoup(html_soup.text, 'html.parser')
 
             except ConnectionError as ce:
-                article.add_error({"HTTP Connection Error": repr(ce)})
+                my_article.add_error({"HTTP Connection Error": repr(ce)})
 
             # Get the text from the article
             try:
@@ -171,12 +115,12 @@ class daily_scraper:
                 # Get text and clean it ups
                 articleText = articleText.get_text().replace('\n', '').strip()
 
-                article.set_article_text(articleText)
+                my_article.set_article_text(articleText)
                 print(articleText)
 
             except AttributeError as error:
-                article.add_error({"Error getting article text: ": repr(error)})
+                my_article.add_error({"Error getting article text: ": repr(error)})
 
-            article.save_to_database()
+            my_article.save_to_database()
 
-            self.trackScrapes(article)
+            self.trackScrapes(my_article)

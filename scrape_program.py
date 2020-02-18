@@ -1,5 +1,6 @@
 import scrape
 
+
 sites_to_scrape = [  # Excelsior
                     {"name": "Excelsior",
                      "link": "https://www.excelsior.com.mx/rss.xml",
