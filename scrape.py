@@ -71,25 +71,32 @@ class daily_scraper:
             # Add the target article object to the scraper obje t
             self.articles_to_scrape.append(article_to_add)
 
+    
+    def configure_transport_adapter(self, domain):
+
+        # In order to set the max_retries we need to:
+        # create a re request.Session()
+        # And Mount the transport adapter to it:
+        # https://realpython.com/python-requests/#ssl-certificate-verification
+        # The specific implementation strategy here is more similar to:
+        # https://stackoverflow.com/questions/15431044/can-i-set-max-retries-for-requests-request
+        session = requests.Session()
+        retries = Retry(total=5,
+                        backoff_factor=0.1,
+                        status_forcelist=[500, 502, 503, 504])
+
+        transport_adapter = HTTPAdapter(max_retries=retries)
+
+        session.mount(my_article.get_domain(), transport_adapter)
+
+
     # Go through the article objects and scrape each one
     def scrape_articles(self):
 
+
         for my_article in self.articles_to_scrape:
 
-            # In order to set the max_retries we need to:
-            # create a re request.Session()
-            # And Mount the transport adapter to it:
-            # https://realpython.com/python-requests/#ssl-certificate-verification
-            # The specific implementation strategy here is more similar to:
-            # https://stackoverflow.com/questions/15431044/can-i-set-max-retries-for-requests-request
-            session = requests.Session()
-            retries = Retry(total=5,
-                            backoff_factor=0.1,
-                            status_forcelist=[500, 502, 503, 504])
-
-            transport_adapter = HTTPAdapter(max_retries=retries)
-
-            session.mount(my_article.get_domain(), transport_adapter)
+            
 
             try:
                 html_soup = session.get(my_article.get_url(), headers=self.headers)
