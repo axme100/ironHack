@@ -54,3 +54,13 @@ class rawArticle:
     def printInfo(self):
         print('url: ' + self.url)
         print('errors' + str(self.errors))
+
+    # This method is called within the sraper to see
+    # if the article is already in the database from the url
+    def check_for_url_duplicate(self):
+        duplicate = list(mycol.find({'url': self.url}, {'url': 1, "_id": 0}))
+        print(duplicate)
+        if duplicate:
+            return True
+        else:
+            return False

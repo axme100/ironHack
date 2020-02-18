@@ -68,8 +68,13 @@ class daily_scraper:
                                                 publication=self.publication,
                                                 xml_author=xml_author)
 
-            # Add the target article object to the scraper obje t
-            self.articles_to_scrape.append(article_to_add)
+            if article_to_add.check_for_url_duplicate() is False:
+
+                # Add the target article object to the scraper obje t
+                self.articles_to_scrape.append(article_to_add)
+
+            else:
+                print("Article URL already present in the database")
 
     def configure_transport_adapter(self, domain):
 
@@ -95,6 +100,7 @@ class daily_scraper:
 
         for my_article in self.articles_to_scrape:
 
+            # Configure session to article domain name
             session = self.configure_transport_adapter(my_article.get_domain())
 
             try:
@@ -110,7 +116,7 @@ class daily_scraper:
                 articleText = parsed_soup.find(self.div_info['target_tag'],
                                                {self.div_info['target_tag_att']: self.div_info['target_tag_att_value']})
 
-                # This will get rid of any text in  javascript code not wanted
+                # This will get rid of any text within javascript tags not wanted
                 try:
                     for script in articleText("script"):
                         script.decompose()
