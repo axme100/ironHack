@@ -6,6 +6,8 @@ from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
 import article
 import pandas as pd
+import re
+import unicodedata
 
 
 #  Define a class of scraper
@@ -22,34 +24,34 @@ class daily_scraper:
         self.div_info = div_info
         self.headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:73.0) Gecko/20100101 Firefox/73.0'}
 
-    def trackScrapes(self, rawArticle):
+    def trackScrapes(self, raw_article):
 
         # If the raw articles does not have any errors
-        if not rawArticle.errors:
+        if not raw_article.errors:
             # Add the URL to the list of articles that were
             # sraped with sucsess
-            self.articles_scraped_no_errors.append(rawArticle.url)
+            self.articles_scraped_no_errors.append(raw_article.url)
 
         # In case the aricles does have errors
         else:
-            self.articles_scraped_with_errors.append([rawArticle.url,
-                                                      rawArticle.errors])
+            self.articles_scraped_with_errors.append([raw_article.url,
+                                                      raw_article.errors])
 
     def get_daily_stats(self):
 
         print("*******************ERROR REPORT**************************")
         print("**********************BEGIN******************************")
         print("Target XML URL: " + str(self.target_xml_url))
-        print("Total Artciles Scraped: " + str(len(self.articles_scraped_no_errors) + len(self.articles_scraped_with_errors)))
+        print("Total Scraped: " + str(len(self.articles_scraped_no_errors) + len(self.articles_scraped_with_errors)))
         print("Articles With Errors: " + str(len(self.articles_scraped_with_errors)))
-
-        print("Errors: ")
 
         for problemArticle in self.articles_scraped_with_errors:
             print("url: " + problemArticle[0])
             print("")
             for error in problemArticle[1]:
                 print(error)
+
+        print("***********************END*******************************")
 
     def get_target_articles_to_scrape(self):
 
@@ -61,19 +63,17 @@ class daily_scraper:
             # If there is none leave it blank
             try:
                 xml_author = entry['author']
-            except KeyError as keyError:
+            except KeyError:
                 xml_author = ''
-                # print(keyError)
 
             formatted_date = pd.to_datetime(entry['published'])
-            print(formatted_date)
 
             # Create an article object
-            article_to_add = article.rawArticle(url=entry['link'],
-                                                title=entry['title'],
-                                                date=formatted_date,
-                                                publication=self.publication,
-                                                xml_author=xml_author)
+            article_to_add = article.raw_article(url=entry['link'],
+                                                 title=entry['title'],
+                                                 date=formatted_date,
+                                                 publication=self.publication,
+                                                 xml_author=xml_author)
 
             if article_to_add.check_for_url_duplicate() is False:
 
@@ -103,7 +103,7 @@ class daily_scraper:
         return session
 
     # Go through the article objects and scrape each one
-    def scrape_articles(self):
+    def scrape_articles(self, custom_regex):
 
         for my_article in self.articles_to_scrape:
 
@@ -112,7 +112,7 @@ class daily_scraper:
 
             try:
                 html_soup = session.get(my_article.get_url(), headers=self.headers)
-                parsed_soup = BeautifulSoup(html_soup.text, 'html.parser')
+                parsed_soup = BeautifulSoup(html_soup.content, 'html.parser')
 
             except ConnectionError as ce:
                 my_article.add_error({"HTTP Connection Error": repr(ce)})
@@ -134,8 +134,17 @@ class daily_scraper:
                 # Get text and clean it ups
                 articleText = articleText.get_text().replace('\n', '').strip()
 
+                # Normmalize unicode
+                # This gets \x-like characters to be spaces
+                # https://stackoverflow.com/a/34669482/5420796
+                articleText = unicodedata.normalize("NFKD", articleText)
+
+                for regex in custom_regex:
+
+                    # Apply custom regex
+                    articleText = re.sub(regex, "", articleText)
+
                 my_article.set_article_text(articleText)
-                # print(articleText)
 
             except AttributeError as error:
                 my_article.add_error({"Error getting article text: ": repr(error)})

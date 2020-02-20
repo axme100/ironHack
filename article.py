@@ -5,8 +5,8 @@ import os
 mongoPass = os.environ['mongoPass']
 
 # Establish the remote connection to the mongo data base:
-# pymongo.MongoClient("mongodb+srv://axme100:{}@cluster0-5jopz.mongodb.net/test?retryWrites=true&w=majority".format(mongoPass))
-myclient = pymongo.MongoClient()
+myclient = pymongo.MongoClient("mongodb+srv://axme100:{}@cluster0-5jopz.mongodb.net/test?retryWrites=true&w=majority".format(mongoPass))
+# myclient = pymongo.MongoClient()
 
 # This is the name of the cluster stored on mongo atlas
 mydb = myclient["finalProject"]
@@ -15,7 +15,7 @@ mydb = myclient["finalProject"]
 mycol = mydb["rawArticles"]
 
 
-class rawArticle:
+class raw_article:
     def __init__(self, url, title, date, publication, xml_author):
         self.url = url
         self.title = title
@@ -32,7 +32,6 @@ class rawArticle:
         self.errors.append(error)
 
     def get_url(self):
-        # print(self.url)
         return self.url
 
     def get_domain(self):
@@ -52,15 +51,12 @@ class rawArticle:
     # This method is used for printing output to console
     # In order to monitor scraping in real time
     def printInfo(self):
-        #print('url: ' + self.url)
-        #print('errors' + str(self.errors))
         pass
 
     # This method is called within the sraper to see
     # if the article is already in the database from the url
     def check_for_url_duplicate(self):
         duplicate = list(mycol.find({'url': self.url}, {'url': 1, "_id": 0}))
-        #print(duplicate)
         if duplicate:
             return True
         else:
