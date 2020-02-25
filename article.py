@@ -5,14 +5,17 @@ import os
 mongoPass = os.environ['mongoPass']
 
 # Establish the remote connection to the mongo data base:
-myclient = pymongo.MongoClient("mongodb+srv://axme100:{}@cluster0-5jopz.mongodb.net/test?retryWrites=true&w=majority".format(mongoPass))
-# myclient = pymongo.MongoClient()
+# myclient = pymongo.MongoClient("mongodb+srv://axme100:{}@cluster0-5jopz.mongodb.net/test?retryWrites=true&w=majority".format(mongoPass))
+myclient = pymongo.MongoClient()
+
 
 # This is the name of the cluster stored on mongo atlas
 mydb = myclient["finalProject"]
 
 # Create a new colection called raw article
 mycol = mydb["rawArticles"]
+
+article_prepared = mydb["article_prepared"]
 
 
 class raw_article:
@@ -57,6 +60,31 @@ class raw_article:
     # if the article is already in the database from the url
     def check_for_url_duplicate(self):
         duplicate = list(mycol.find({'url': self.url}, {'url': 1, "_id": 0}))
+        if duplicate:
+            return True
+        else:
+            return False
+
+
+class processed_article:
+    def __init__(self, _id, list_of_sentences, bag_of_words, level, level_binary):
+        self.unique_id = _id,
+        self.list_of_sentences = list_of_sentences,
+        self.bag_of_words = bag_of_words,
+        self.level = level
+        self.level_binary = level_binary
+
+    def save_to_database(self):
+
+        # Save the entry into the mongo database
+        article_prepared.insert_one({'_id': self.unique_id,
+                                     'bag_of_words': self.bag_of_words,
+                                     'list_of_sentences': self.list_of_sentences,
+                                     'level': self.level,
+                                     'level_binary': self.level_binary})
+
+    def check_for_id_duplicate(self):
+        duplicate = list(mycol.find({'_id': self.unique_id}, {"_id": 1}))
         if duplicate:
             return True
         else:
