@@ -15,7 +15,7 @@ mydb = myclient["finalProject"]
 # Create a new colection called raw article
 mycol = mydb["rawArticles"]
 
-article_prepared = mydb["article_prepared"]
+article_prepared = mydb["article_prepared_2"]
 
 
 class raw_article:
@@ -77,7 +77,7 @@ class processed_article:
     def save_to_database(self):
 
         # Save the entry into the mongo database
-        article_prepared.insert_one({'_id': self.unique_id,
+        article_prepared.insert_one({'_id': self.unique_id[0],
                                      'bag_of_words': self.bag_of_words,
                                      'list_of_sentences': self.list_of_sentences,
                                      'level': self.level,
