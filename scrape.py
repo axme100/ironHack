@@ -59,29 +59,46 @@ class daily_scraper:
 
         for entry in parsed_xml['entries']:
 
-            # Get the author field of the XML document
-            # If there is none leave it blank
             try:
-                xml_author = entry['author']
-            except KeyError:
-                xml_author = ''
+                link = entry['link']
+            except:
+                pass
 
-            formatted_date = pd.to_datetime(entry['published'])
+            if link:
 
-            # Create an article object
-            article_to_add = article.raw_article(url=entry['link'],
-                                                 title=entry['title'],
-                                                 date=formatted_date,
-                                                 publication=self.publication,
-                                                 xml_author=xml_author)
+                # Get the author field of the XML document
+                # If there is none leave it blank
+                try:
+                    xml_author = entry['author']
+                except KeyError:
+                    xml_author = ''
 
-            if article_to_add.check_for_url_duplicate() is False:
+                try:
+                    formatted_date = pd.to_datetime(entry['published'])
+                except:
+                    formatted_date = ''
 
-                # Add the target article object to the scraper obje t
-                self.articles_to_scrape.append(article_to_add)
+                try:
+                    title = entry['title']
+                except:
+                    title = ''
 
+                # Create an article object
+                article_to_add = article.raw_article(url=link,
+                                                     title=title,
+                                                     date=formatted_date,
+                                                     publication=self.publication,
+                                                     xml_author=xml_author)
+
+                if article_to_add.check_for_url_duplicate() is False:
+
+                    # Add the target article object to the scraper obje t
+                    self.articles_to_scrape.append(article_to_add)
+
+                else:
+                    print("Article URL already present in the database")
             else:
-                print("Article URL already present in the database")
+                print("No link in database")
 
     def configure_transport_adapter(self, domain):
 
