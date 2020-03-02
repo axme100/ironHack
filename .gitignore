@@ -3,3 +3,4 @@ app-env
 books/
 __pycache__
 *.pdf
+raw_mongo_export_command
