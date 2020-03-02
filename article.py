@@ -66,7 +66,7 @@ class raw_article:
             return False
 
 
-class processed_article:
+class processed_efe_article:
     def __init__(self, _id, list_of_sentences, bag_of_words, level, level_binary):
         self.unique_id = _id,
         self.list_of_sentences = list_of_sentences,

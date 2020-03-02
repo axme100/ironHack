@@ -34,6 +34,16 @@ class linguistic_transformer:
 
         return source_cursor
 
+    def check_for_id_duplicate(self, checked_id):
+
+        my_col_efe_articles = mydb[self.source]
+
+        duplicate = list(my_col_efe_articles.find({'_id': checked_id}, {"_id": 1}))
+        if duplicate:
+            return True
+        else:
+            return False
+
     def parse(self, my_article):
 
         # Remove the last little bit of information that we do not need
@@ -71,21 +81,27 @@ class linguistic_transformer:
 
         for raw_article in cursor:
 
-            advanced_levels = ['B2', 'C1', 'C2']
-            if raw_article['level'] in advanced_levels:
-                binary_level = 1
-            else:
-                binary_level = 0
+            # First check to see if the article is even in the database
+            if self.check_for_id_duplicate(raw_article['_id']) is False:
 
-            doc = self.parse(raw_article['articleText'])
-            bag_of_words = self.create_bag_of_words(doc)
-            list_of_sentences = self.create_list_of_sentences(doc)
-            new_processed_article = article.processed_article(_id=raw_article['_id'],
-                                                              list_of_sentences=list_of_sentences,
-                                                              bag_of_words=bag_of_words,
-                                                              level=raw_article['level'],
-                                                              level_binary=binary_level)
-            new_processed_article.save_to_database()
+                advanced_levels = ['B2', 'C1', 'C2']
+                if raw_article['level'] in advanced_levels:
+                    binary_level = 1
+                else:
+                    binary_level = 0
+
+                doc = self.parse(raw_article['articleText'])
+                bag_of_words = self.create_bag_of_words(doc)
+                list_of_sentences = self.create_list_of_sentences(doc)
+                new_processed_article = article.processed_efe_article(_id=raw_article['_id'],
+                                                                      list_of_sentences=list_of_sentences,
+                                                                      bag_of_words=bag_of_words,
+                                                                      level=raw_article['level'],
+                                                                      level_binary=binary_level)
+                new_processed_article.save_to_database()
+
+            else:
+                print("Transformed article already in database")
 
 
 my_transformer = linguistic_transformer('efeArticles')

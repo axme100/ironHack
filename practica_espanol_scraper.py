@@ -59,7 +59,7 @@ def get_target_urls(url):
 
     # Get the number of target URLS
     targetURLs = []
-    for page in range(130, numberPages + 1):
+    for page in range(0, numberPages + 1):
         targetURL = "https://www.practicaespanol.com/noticias/page/" + str(page) + "/"
         targetURLs.append(targetURL)
 
