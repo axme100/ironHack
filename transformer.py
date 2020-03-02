@@ -21,8 +21,9 @@ mydb = myclient["finalProject"]
 
 class linguistic_transformer:
 
-    def __init__(self, source):
+    def __init__(self, source, destination):
         self.source = source
+        self.destination = destination
 
     def connect_to_source(self):
 
@@ -36,7 +37,7 @@ class linguistic_transformer:
 
     def check_for_id_duplicate(self, checked_id):
 
-        my_col_efe_articles = mydb[self.source]
+        my_col_efe_articles = mydb[self.destination]
 
         duplicate = list(my_col_efe_articles.find({'_id': checked_id}, {"_id": 1}))
         if duplicate:
@@ -47,7 +48,7 @@ class linguistic_transformer:
     def parse(self, my_article):
 
         # Remove the last little bit of information that we do not need
-        my_article = re.sub(r"\(\d+ de.*$", "", my_article.strip())
+        # my_article = re.sub(r"\(\d+ de.*$", "", my_article.strip())
 
         # Make everything undercase
         testArticle = my_article.casefold()
@@ -75,6 +76,10 @@ class linguistic_transformer:
 
         return my_sentences
 
+    def get_doc_json(self, doc):
+
+        return str(doc.to_json)
+
     def transform(self):
 
         cursor = self.connect_to_source()
@@ -84,25 +89,39 @@ class linguistic_transformer:
             # First check to see if the article is even in the database
             if self.check_for_id_duplicate(raw_article['_id']) is False:
 
-                advanced_levels = ['B2', 'C1', 'C2']
-                if raw_article['level'] in advanced_levels:
-                    binary_level = 1
-                else:
-                    binary_level = 0
-
+                # First use spacy to parse the document and save in a file calle doc
                 doc = self.parse(raw_article['articleText'])
+
+                # Get the bag of words from teh doc
                 bag_of_words = self.create_bag_of_words(doc)
+
+                # Get the list of sentences from spacy
                 list_of_sentences = self.create_list_of_sentences(doc)
-                new_processed_article = article.processed_efe_article(_id=raw_article['_id'],
-                                                                      list_of_sentences=list_of_sentences,
-                                                                      bag_of_words=bag_of_words,
-                                                                      level=raw_article['level'],
-                                                                      level_binary=binary_level)
+
+                # Get spacy JSON
+                spacy_json = self.get_doc_json(doc)
+
+                # Get other things
+
+                # Save the article in the processed corpu using the same ID as before
+                new_processed_article = article.processed_main_article(_id=raw_article['_id'],
+                                                                       title=raw_article['title'],
+                                                                       publication=raw_article['publication'],
+                                                                       date=raw_article['date'],
+                                                                       list_of_sentences=list_of_sentences,
+                                                                       bag_of_words=bag_of_words,
+                                                                       level='',
+                                                                       level_binary='',
+                                                                       spacy_json=spacy_json,
+                                                                       url=raw_article['url'])
                 new_processed_article.save_to_database()
 
             else:
                 print("Transformed article already in database")
 
 
-my_transformer = linguistic_transformer('efeArticles')
+# my_transformer = linguistic_transformer('efeArticles')
+# my_transformer.transform()
+
+my_transformer = linguistic_transformer('rawArticles', 'main_processed_article')
 my_transformer.transform()

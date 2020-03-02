@@ -17,6 +17,8 @@ mycol = mydb["rawArticles"]
 
 article_prepared = mydb["article_prepared_2"]
 
+main_article_prepared = mydb["main_processed_article"]
+
 
 class raw_article:
     def __init__(self, url, title, date, publication, xml_author):
@@ -89,3 +91,31 @@ class processed_efe_article:
             return True
         else:
             return False
+
+
+class processed_main_article:
+    def __init__(self, _id, list_of_sentences, bag_of_words, level, level_binary, spacy_json, title, publication, date, url):
+        self.unique_id = _id,
+        self.list_of_sentences = list_of_sentences,
+        self.bag_of_words = bag_of_words,
+        self.level = level,
+        self.level_binary = level_binary
+        self.spacy_json = spacy_json
+        self.title = title
+        self.publication = publication
+        self.date = date
+        self.url = url
+
+    def save_to_database(self):
+
+        # Save the entry into the mongo database
+        main_article_prepared.insert_one({'_id': self.unique_id[0],
+                                          'title': self.title,
+                                          'publication': self.publication,
+                                          'date': self.date,
+                                          'bag_of_words': self.bag_of_words,
+                                          'list_of_sentences': self.list_of_sentences,
+                                          'level': self.level,
+                                          'level_binary': self.level_binary,
+                                          'spacy_json': self.spacy_json,
+                                          'url': self.url})
