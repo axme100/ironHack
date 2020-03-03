@@ -5,8 +5,8 @@ import os
 mongoPass = os.environ['mongoPass']
 
 # Establish the remote connection to the mongo data base:
-# myclient = pymongo.MongoClient("mongodb+srv://axme100:{}@cluster0-5jopz.mongodb.net/test?retryWrites=true&w=majority".format(mongoPass))
-myclient = pymongo.MongoClient()
+myclient = pymongo.MongoClient("mongodb+srv://axme100:{}@cluster0-5jopz.mongodb.net/test?retryWrites=true&w=majority".format(mongoPass))
+# myclient = pymongo.MongoClient()
 
 
 # This is the name of the cluster stored on mongo atlas

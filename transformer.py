@@ -3,6 +3,7 @@ import spacy
 from nltk.corpus import stopwords
 import re
 import article
+import os
 
 nlp = spacy.load("es_core_news_sm")
 
@@ -10,10 +11,13 @@ spacy_stopwords = spacy.lang.es.stop_words.STOP_WORDS
 nltk_stopwords = set(stopwords.words('spanish'))
 spanish_stop_words = spacy_stopwords.union(nltk_stopwords)
 
+# Get the mongodb password from an environment variable
+mongoPass = os.environ['mongoPass']
+
 
 # Establish the remote connection to the mongo data base:
-# myclient = pymongo.MongoClient("mongodb+srv://axme100:{}@cluster0-5jopz.mongodb.net/test?retryWrites=true&w=majority".format(mongoPass))
-myclient = pymongo.MongoClient()
+myclient = pymongo.MongoClient("mongodb+srv://axme100:{}@cluster0-5jopz.mongodb.net/test?retryWrites=true&w=majority".format(mongoPass))
+# myclient = pymongo.MongoClient()
 
 # This is the name of the cluster stored on mongo atlas
 mydb = myclient["finalProject"]
