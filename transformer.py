@@ -108,6 +108,8 @@ class linguistic_transformer:
                                                                        title=raw_article['title'],
                                                                        publication=raw_article['publication'],
                                                                        date=raw_article['date'],
+                                                                       articleText=raw_article['articleText'],
+                                                                       category='',
                                                                        list_of_sentences=list_of_sentences,
                                                                        bag_of_words=bag_of_words,
                                                                        level='',

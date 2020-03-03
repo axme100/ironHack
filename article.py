@@ -94,7 +94,7 @@ class processed_efe_article:
 
 
 class processed_main_article:
-    def __init__(self, _id, list_of_sentences, bag_of_words, level, level_binary, spacy_json, title, publication, date, url):
+    def __init__(self, _id, list_of_sentences, bag_of_words, level, level_binary, spacy_json, title, publication, date, articleText, category, url):
         self.unique_id = _id,
         self.list_of_sentences = list_of_sentences,
         self.bag_of_words = bag_of_words,
@@ -105,6 +105,8 @@ class processed_main_article:
         self.publication = publication
         self.date = date
         self.url = url
+        self.articleText = articleText
+        self.category = category
 
     def save_to_database(self):
 
@@ -118,4 +120,6 @@ class processed_main_article:
                                           'level': self.level,
                                           'level_binary': self.level_binary,
                                           'spacy_json': self.spacy_json,
-                                          'url': self.url})
+                                          'url': self.url,
+                                          'articleText': self.articleText,
+                                          'category': self.category})
