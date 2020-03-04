@@ -62,7 +62,7 @@ def query_articles(user_categories, user_level_binary):
 
         articles_cursor = main_articles.aggregate([{'$match': {'level_binary': user_level_binary,'category': category}},
                                                    {'$sample': {'size': 5}},
-                                                   {'$unset': ["_id", "bag_of_words", "level", "spacy_json", "list_of_sentences"]}])
+                                                   {'$unset': ["bag_of_words", "level", "spacy_json", "list_of_sentences"]}])
 
         all_category_articles = list(articles_cursor)
         my_articles_to_add = random.choices(all_category_articles, k=5)
