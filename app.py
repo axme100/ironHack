@@ -3,6 +3,7 @@ from flask_cors import CORS, cross_origin
 import os
 import pymongo
 from bson.objectid import ObjectId
+import random
 
 
 app = Flask(__name__)
@@ -65,9 +66,10 @@ def query_articles(user_categories, user_level_binary):
                                               "list_of_sentences": 0,
                                               "level": 0, "level_binary": 0,
                                               "spacy_json": 0,
-                                              "articleText": 0}).limit(5)
+                                              "articleText": 0})
 
-        my_articles_to_add = list(articles_cursor)
+        all_category_articles = list(articles_cursor)
+        my_articles_to_add = random.choices(all_category_articles, k=5)
 
         # Unpack all th articles and append them
         for my_article in my_articles_to_add:
