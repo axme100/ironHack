@@ -62,7 +62,8 @@ def query_articles(user_categories, user_level_binary):
 
         articles_cursor = main_articles.aggregate([{'$match': {'level_binary': user_level_binary,'category': category}},
                                                    {'$sample': {'size': 5}},
-                                                   {'$unset': ["bag_of_words", "level", "spacy_json", "list_of_sentences"]}])
+                                                   {"$project": {"_id": {"$toString": "$_id"}, "publication": 1, "articleText": 1, "date": 1, "category": 1, "title": 1, "url": 1}},
+                                                   ])
 
         all_category_articles = list(articles_cursor)
         my_articles_to_add = random.choices(all_category_articles, k=5)
