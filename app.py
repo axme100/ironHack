@@ -60,16 +60,26 @@ def query_articles(user_categories, user_level_binary):
 
     for category in user_categories:
 
-        articles_cursor = main_articles.aggregate([{'$match': {'level_binary': user_level_binary,'category': category}},
+        articles_cursor = main_articles.aggregate([{'$match': {'level_binary': user_level_binary,'category': category, 'articleText': {'$nin': [None, '']}}},
                                                    {'$sample': {'size': 5}},
-                                                   {"$project": {"_id": {"$toString": "$_id"}, "publication": 1, "articleText": 1, "date": 1, "category": 1, "title": 1, "url": 1}},
+                                                   {"$project": {"_id": {"$toString": "$_id"}, "publication": 1, "articleText": 1, "date": 1, "category": 1, "title": 1, "url": 1, "level_binary": 1}},
                                                    ])
 
         all_category_articles = list(articles_cursor)
-        my_articles_to_add = random.choices(all_category_articles, k=5)
+        # my_articles_to_add = random.choices(all_category_articles, k=5)
 
-        # Unpack all th articles and append them
-        for my_article in my_articles_to_add:
+        # Unpack all th articles and append them to a list
+        for my_article in all_category_articles:
+
+            # Convert the level of the article to a string
+            # Most likely I could do this within a mongo query
+            level = my_article['level_binary']
+            if level == 0:
+                my_article['level_binary'] = "beginner"
+            elif level == 1:
+                my_article['level_binary'] = "advanced"
+
+            # Append the article to the list of articles that we are going to return
             articles_to_return.append(my_article)
 
     return(articles_to_return)
